@@ -1,0 +1,52 @@
+[package]
+name = "heat1-lambda"
+version = "0.1.0"
+edition = "2021"
+
+[profile.dev.package.sqlx-macros]
+opt-level = 3
+
+# Starting in Rust 1.62 you can use `cargo add` to add dependencies 
+# to your project.
+#
+# If you're using an older Rust version,
+# download cargo-edit(https://github.com/killercup/cargo-edit#installation) 
+# to install the `add` subcommand.
+#
+# Running `cargo add DEPENDENCY_NAME` will
+# add the latest version of a dependency to the list,
+# and it will keep the alphabetic ordering for you.
+
+[dependencies]
+base64 = "0.21.2"
+lambda_http = "0.8.1"
+lambda_runtime = "0.8.1"
+native-tls = "0.2.11"
+openssl = "0.10.56"
+postgres = "0.19.5"
+postgres-openssl = "0.5.0"
+serde = {version ="1.0.183", features = ["derive"]}
+serde_json = "1.0.104"
+tokio = { version = "1", features = ["full"] }
+tokio-postgres = "0.7.8"
+tracing = { version = "0.1", features = ["log"] }
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt"] }
+dotenvy = "0.15.7"
+sqlx = { version = "0.6", features = [ "runtime-tokio-rustls", "postgres"] }
+
+
+[[bin]]
+name = "get_email"
+path = "src/handlers/get_email.rs"
+
+[[bin]]
+name = "get_tournaments"
+path = "src/handlers/get_tournaments.rs"
+
+[[bin]]
+name = "get_user_leagues"
+path = "src/handlers/get_user_leagues.rs"
+
+[[bin]]
+name = "update_username"
+path = "src/handlers/update_username.rs"
