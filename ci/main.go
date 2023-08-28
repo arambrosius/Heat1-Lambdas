@@ -38,6 +38,7 @@ func main() {
 	awsAccessKeyId := client.SetSecret("awsAccessKeyId", os.Getenv("AWS_ACCESS_KEY_ID"))
 	awsSecretAccessKey := client.SetSecret("awsSecretAccessKey", os.Getenv("AWS_SECRET_ACCESS_KEY"))
 
+	awsRole := os.Getenv("AWS_ROLE")
 	awsRegion := os.Getenv("AWS_DEFAULT_REGION")
 
 	// get reference to function directory
@@ -47,15 +48,15 @@ func main() {
 
 	functions := []function{
 		{
-			binary:       "get_email",
-			binaryZip:    "get_email.zip",
+			binary:       "bootstrap",
+			binaryZip:    "bootstrap.zip",
 			functionName: "getEmail",
 		},
-		{
-			binary:       "get_tournaments",
-			binaryZip:    "get_tournaments.zip",
-			functionName: "getTournaments",
-		},
+		// {
+		// 	binary:       "get_tournaments",
+		// 	binaryZip:    "get_tournaments.zip",
+		// 	functionName: "getTournaments",
+		// },
 	}
 
 	build := client.Container().
@@ -65,7 +66,6 @@ func main() {
 		WithDirectory("/src", lambdaDir).
 		WithWorkdir("/src").
 		WithExec([]string{"cargo", "build", "--bins", "--release"})
-		// WithExec([]string{"zip", emailFunction.binaryZip, "target/release/" + emailFunction.binary, "--verbose"})
 
 	for _, f := range functions {
 		build = build.WithExec([]string{"zip", f.binaryZip, "target/release/" + f.binary})
@@ -81,7 +81,7 @@ func main() {
 		// Create New Function
 		response, err := aws.
 			WithFile("/tmp/"+f.binaryZip, build.File("/src/"+f.binaryZip)).
-			WithExec([]string{"lambda", "create-function", "--function-name", f.functionName, "--zip-file", "fileb:///tmp/" + f.binaryZip, "--runtime", "rust1.71", "--handler", f.binary, "--role", "arn:aws:iam::212748855138:role/lambda-cicd"}).
+			WithExec([]string{"lambda", "create-function", "--function-name", f.functionName, "--zip-file", "fileb:///tmp/" + f.binaryZip, "--runtime", "provided.al2", "--handler", f.binary, "--role", awsRole}).
 			WithExec([]string{"lambda", "add-permission", "--function-name", f.functionName, "--statement-id", "FunctionURLAllowPublicAccess", "--action", "lambda:InvokeFunctionUrl", "--principal", "*", "--function-url-auth-type", "NONE"}).
 			WithExec([]string{"lambda", "create-function-url-config", "--function-name", f.functionName, "--auth-type", "NONE"}).
 			Stdout(ctx)
